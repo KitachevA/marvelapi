@@ -11,13 +11,45 @@ class CharList extends Component {
         chars: [],
         loading: true,
         error: false,
-        activeClass: ''
+        activeClass: '',
+        active: false,
+        newItemLoading: false,
+        offset: 210,
+        charEnded: false
     }
 
     marvelService = new MarvelService();
 
-    onCharsLoaded = (chars) => {
-        this.setState({ chars, loading: false })
+    componentDidMount() {
+        this.addChar()
+    }
+
+    onCharsLoaded = (newChars) => {
+        let ended = false
+        if(newChars.length < 9){
+            ended = true
+        }
+        this.setState(({offset, chars,})=>({  //колбек функуия нужна тогда когда есть зависимость нового состояния от предидущего
+            chars: [...chars, ...newChars],
+            loading: false,
+            newItemLoading: false,
+            offset: offset+ 9,
+            charEnded: ended
+          }))
+    }
+
+    addChar = (offset) => {
+        this.onCharListLoading()
+        this.marvelService
+            .getAllCharacter(offset)
+            .then(this.onCharsLoaded)
+            .catch(this.onError)
+    }
+
+    onCharListLoading = () => {
+        this.setState({
+            newItemLoading: true
+        })
     }
 
     onError = () => {
@@ -27,18 +59,13 @@ class CharList extends Component {
         })
     }
 
-    onToggleClass = (name) => {
+    onToggleClass = (name, id) => {
+        this.props.onCharSelect(id)
         this.setState({
-            activeClass: name
+            activeClass: name,
+            active: !this.state.active
         })
-    }
-
-    componentDidMount() {
-        this.marvelService
-            .getAllCharacter()
-            .then(this.onCharsLoaded)
-            .catch(this.onError)
-
+        
     }
 
     arrCharRender(arr) {
@@ -47,17 +74,17 @@ class CharList extends Component {
             if (item.thumbnail === "http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg") {
                 imgStyle = { objectFit: "unset" }
             }
-
             let toggleClass = "char__item"
-
-            if (this.state.activeClass === item.name) {
+            
+            
+            if (this.state.activeClass === item.name && this.state.active === true) {
                 toggleClass += " char__item_selected"
             }
 
             return (
-                <li onClick={() => this.onToggleClass(item.name)} className={toggleClass} key={item.name}>
+                <li onClick={() => this.onToggleClass(item.name, item.id)} className={toggleClass} key={item.id}>
                     <img src={item.thumbnail} alt={item.name} style={imgStyle} />
-                    <div className="char__name">{item.name}</div>
+                    <div  className="char__name">{item.name}</div>
                 </li>
             )
         })
@@ -70,7 +97,7 @@ class CharList extends Component {
     }
 
     render() {
-        const { chars, loading, error } = this.state
+        const { chars, loading, error, offset, newItemLoading } = this.state
 
         const lists = this.arrCharRender(chars)
 
@@ -84,7 +111,11 @@ class CharList extends Component {
                 {errorMessage}
                 {spinner}
                 {content}
-                <button className="button button__main button__long">
+                <button 
+                    className="button button__main button__long"
+                    disabled={newItemLoading}
+                    onClick={()=> this.addChar(offset)}
+                    style={{"display": this.state.charEnded ? 'none': 'block'}}>
                     <div className="inner">load more</div>
                 </button>
             </div>
