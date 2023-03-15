@@ -15,27 +15,47 @@ class CharList extends Component {
         active: false,
         newItemLoading: false,
         offset: 210,
-        charEnded: false
+        charEnded: false,
+
     }
 
     marvelService = new MarvelService();
 
     componentDidMount() {
-        this.addChar()
+        if (this.state.offset < 219) {
+            this.addChar();
+        }
+        window.addEventListener("scroll", this.onScroll);
     }
+    componentWillUnmount() {
+        window.removeEventListener("scroll", this.onScroll);
+    }
+
+    onScroll = () => {
+        if (this.state.offset < 219) return;
+        if (this.state.newItemLoading) return;
+        if (this.state.charEnded){
+            window.removeEventListener("scroll", this.onScroll);
+        }
+
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+            this.onCharListLoading();
+            this.addChar(this.state.offset);
+        }
+    };
 
     onCharsLoaded = (newChars) => {
         let ended = false
-        if(newChars.length < 9){
+        if (newChars.length < 9) {
             ended = true
         }
-        this.setState(({offset, chars,})=>({  //колбек функуия нужна тогда когда есть зависимость нового состояния от предидущего
+        this.setState(({ offset, chars, }) => ({  //колбек функуия нужна тогда когда есть зависимость нового состояния от предидущего
             chars: [...chars, ...newChars],
             loading: false,
             newItemLoading: false,
-            offset: offset+ 9,
+            offset: offset + 9,
             charEnded: ended
-          }))
+        }))
     }
 
     addChar = (offset) => {
@@ -65,9 +85,9 @@ class CharList extends Component {
             activeClass: name,
             active: !this.state.active
         })
-        
-    }
 
+    }
+    //test
     arrCharRender(arr) {
         const items = arr.map(item => {
             let imgStyle = { objectFit: 'cover' };
@@ -75,8 +95,8 @@ class CharList extends Component {
                 imgStyle = { objectFit: "unset" }
             }
             let toggleClass = "char__item"
-            
-            
+
+
             if (this.state.activeClass === item.name && this.state.active === true) {
                 toggleClass += " char__item_selected"
             }
@@ -84,7 +104,7 @@ class CharList extends Component {
             return (
                 <li onClick={() => this.onToggleClass(item.name, item.id)} className={toggleClass} key={item.id}>
                     <img src={item.thumbnail} alt={item.name} style={imgStyle} />
-                    <div  className="char__name">{item.name}</div>
+                    <div className="char__name">{item.name}</div>
                 </li>
             )
         })
@@ -111,11 +131,11 @@ class CharList extends Component {
                 {errorMessage}
                 {spinner}
                 {content}
-                <button 
+                <button
                     className="button button__main button__long"
                     disabled={newItemLoading}
-                    onClick={()=> this.addChar(offset)}
-                    style={{"display": this.state.charEnded ? 'none': 'block'}}>
+                    onClick={this.addChar(offset)}
+                    style={{ "display": this.state.charEnded ? 'none' : 'block' }}>
                     <div className="inner">load more</div>
                 </button>
             </div>
