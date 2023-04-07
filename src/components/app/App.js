@@ -12,7 +12,7 @@ class App extends Component{
         selectedChar: null
     }
 
-    onCharSelect = (id) => {
+    onCharSelected = (id) => {
         this.setState({
             selectedChar: id
         })
@@ -27,7 +27,7 @@ class App extends Component{
                         <RandomChar/>
                     </ErrorBandary>
                     <div className="char__content">
-                        <CharList onCharSelect={this.onCharSelect}/>
+                        <CharList onCharSelected={this.onCharSelected}/>
                         <CharInfo selectedChar={this.state.selectedChar}/>
                     </div>
                     <img className="bg-decoration" src={decoration} alt="vision"/>
